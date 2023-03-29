@@ -1,5 +1,8 @@
 let addToy = false;
 
+const baseUrl = 'http://localhost:3000/'
+const toysUrl = baseUrl + 'toys/'
+
 document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.querySelector("#new-toy-btn");
   const toyFormContainer = document.querySelector(".container");
@@ -11,96 +14,75 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       toyFormContainer.style.display = "none";
     }
+    const addToyForm = document.getElementById('add-toy-form')
+    addToyForm.addEventListener('submit', createNewToy)
   });
+  
+  
+fetchToys()
 });
 
-function addToyCard(toy) {
-
-  const toyCollection = document.getElementById('toy-collection');
-
-  const div = document.createElement('div');
-  div.className = "card"
-
-  toyCollection.appendChild(div);
-
-  const h2 = document.createElement('h2');
-  h2.textContent = toy.name;
-  div.appendChild(h2);
-
-  const image = document.createElement('img');
-  image.className = "toy-avatar";
-  image.src = toy.image;
-  div.appendChild(image);
-
-  const likes = document.createElement('p');
-  likes.textContent = toy.likes;
-  div.appendChild(likes);
-
-  // const likeTracker = document.createElement('label');
-  // likeTracker.textContent = toy.likes;
-  // div.appendChild(likeTracker);
-
-  const btn = document.createElement('button');
-  btn.className = "like-btn";
-  btn.id = toy.id;
-  div.appendChild(btn);
-  btn.textContent = 'like'
+const fetchToys = () => {
+  fetch(toysUrl)
+  .then(response => response.json())
+  .then(renderAllToys)
 }
 
-  function fetchToys() {
-    fetch('http://localhost:3000/toys')
-    .then(response => response.json())
-    .then(toysData => addToyCards(toysData))
-    }
-
-function addToyCards(toys) {
-  toys.forEach(addToyCard)
+const renderAllToys = (toys) => {
+  toys.forEach(renderToyCard)
 }
 
-fetchToys();
+const renderToyCard = (toy) => {
+  const toyCollectionDiv = document.getElementById('toy-collection')
 
-const toyForm = document.getElementById('toy-form');
+  const toyCardDiv = document.createElement('div')
+  toyCollectionDiv.appendChild(toyCardDiv)
+  toyCardDiv.className = 'card'
 
-toyForm.addEventListener('submit', (e) => {
-  e.preventDefault()
-const toy = {
-  name: e.target.name.value,
-  image: e.target.image.value,
+  const toyCardH2 = document.createElement('h2')
+  toyCardDiv.appendChild(toyCardH2)
+  toyCardH2.textContent = toy.className
+
+  const toyCardImage = document.createElement('img')
+  toyCardDiv.appendChild(toyCardImage)
+  toyCardImage.src = toy.image 
+  toyCardImage.alt = "Picture of a toy"
+  toyCardImage.className = "toy-avatar"
+
+  const toyCardLikesP = document.createElement('p')
+  toyCardDiv.appendChild(toyCardLikesP)
+  toyCardLikesP.textContent = `${toy.likes} likes`
+
+  const toyCardLikeButton = document.createElement('button')
+  toyCardDiv.appendChild(toyCardLikeButton)
+  toyCardLikeButton.textContent = "like!"
+  toyCardLikeButton.className = 'like-btn'
+  toyCardLikeButton.id =toy.id 
+}
+
+function createNewToy(event) {
+  event.preventDefault()
+  const toyForm = event.target
+
+const newToy = {
+  name: toyForm.name.value,
+  image:  toyForm.image.value,
   likes: 0
 }
 
-fetch('http://localhost:3000/toys', {
-  method: 'POST', 
+fetch(toysUrl, {
+  method: 'POST',
   headers: {
-    'Content-Type' : 'application/json'
+    'content-type': 'application/json',
+    accepts: "application/json"
   },
-    body: JSON.stringify(toy)
-  
+  body: JSON.stringify(newToy)
 })
-.then(res => res.json())
-.then(toy => {
-  addToyCard(toy)
-  e.target.reset();
+fetch(toysUrl, postRequest)
+.then(response => response.json())
+.then(newToyData => {
+
+renderToyCard(newToyData)
+toyForm.reset()
 })
-})
-
-const likeButton = document.getElementsByClassName('like-btn');
-//all buttons are in HTML collection under different id's
-
-//patch request looks very similar to post request, except we need
-//the id of the toy
-
-
-// likeButton.addEventListener('click', () => {
-//   fetch('http://localhost:3000/toys/id', {
-//     method: 'PATCH',
-//     headers: {
-//     'Content-Type': 'application/json'
-//   },
-// body: JSON.stringify({toys: likes.value})
-// })
-// .then(res => res.json())
-// .then(toy => {
-//   likes.textContent = toy.likes;
-// })
-// })
+}
